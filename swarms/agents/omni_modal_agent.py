@@ -8,7 +8,13 @@ from langchain_experimental.autonomous_agents.hugginggpt.task_executor import (
 from langchain_experimental.autonomous_agents.hugginggpt.task_planner import (
     load_chat_planner,
 )
-from transformers import load_tool
+# from transformers import load_tool  # Deprecated in newer transformers versions
+try:
+    from transformers import load_tool
+except ImportError:
+    # Handle gracefully for newer transformers versions
+    def load_tool(*args, **kwargs):
+        raise ImportError("load_tool is not available in this transformers version")
 
 from swarms.structs.agent import Agent
 from swarms.utils.loguru_logger import logger

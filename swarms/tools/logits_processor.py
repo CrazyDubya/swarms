@@ -1,9 +1,28 @@
 import torch
-from transformers import (
-    LogitsWarper,
-    PreTrainedTokenizer,
-    StoppingCriteria,
-)
+try:
+    from transformers import (
+        LogitsWarper,
+        PreTrainedTokenizer,
+        StoppingCriteria,
+    )
+except ImportError:
+    # Handle newer transformers versions
+    from transformers import PreTrainedTokenizer
+    try:
+        from transformers import StoppingCriteria
+    except ImportError:
+        # Create a dummy StoppingCriteria for newer versions
+        class StoppingCriteria:
+            def __call__(self, input_ids, scores, **kwargs):
+                return False
+    
+    try:
+        from transformers import LogitsWarper
+    except ImportError:
+        # Create a dummy LogitsWarper for newer versions
+        class LogitsWarper:
+            def __call__(self, input_ids, scores):
+                return scores
 
 
 class StringStoppingCriteria(StoppingCriteria):
