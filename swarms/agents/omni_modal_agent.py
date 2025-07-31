@@ -14,6 +14,20 @@ try:
 except ImportError:
     # Handle gracefully for newer transformers versions
     def load_tool(*args, **kwargs):
+        """
+        Fallback function for `load_tool` in newer versions of the `transformers` library.
+        
+        This function is defined to handle cases where the `load_tool` function is not
+        available in the installed version of `transformers`. It raises an ImportError
+        to indicate that the functionality is not supported.
+        
+        Args:
+            *args: Positional arguments (not used).
+            **kwargs: Keyword arguments (not used).
+        
+        Raises:
+            ImportError: Always raised to indicate `load_tool` is unavailable.
+        """
         raise ImportError("load_tool is not available in this transformers version")
 
 from swarms.structs.agent import Agent
