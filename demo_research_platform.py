@@ -176,24 +176,26 @@ def load_research_data(filename: str) -> str:
 
 def search_web(query: str) -> str:
     """Mock web search tool (replace with real implementation)"""
+    import random
     print(f"🔍 Searching web for: {query}")
-    return f"""Web Search Results for: "{query}"
-
-1. Scientific Journal Articles (15 results)
-   - Recent peer-reviewed studies from Nature, Science, Cell
-   - High-impact research with robust methodology
-   
-2. Government Reports (8 results) 
-   - Official policy documents and white papers
-   - Statistical data from authoritative sources
-   
-3. Expert Analysis (12 results)
-   - Commentary from recognized domain experts
-   - Conference proceedings and symposium reports
-
-Note: This is a mock search. In production, integrate with real search APIs like Google Scholar, PubMed, etc."""
-
-
+    
+    # Generate mock results dynamically
+    categories = [
+        "Scientific Journal Articles",
+        "Government Reports",
+        "Expert Analysis",
+        "Technical Blogs",
+        "News Articles"
+    ]
+    
+    results = "\n".join(
+        f"{i + 1}. {category} ({random.randint(5, 20)} results)\n"
+        f"   - Example content related to '{query}'\n"
+        f"   - Additional details and insights"
+        for i, category in enumerate(random.sample(categories, 3))
+    )
+    
+    return f"""Web Search Results for: "{query}"\n\n{results}\n\nNote: This is a mock search. In production, integrate with real search APIs like Google Scholar, PubMed, etc."""
 class ResearchPlatform:
     """Main research platform orchestrator"""
     
