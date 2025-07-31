@@ -228,7 +228,9 @@ Always:
             max_loops=1,
             autosave=True,
             verbose=True,
-            tools=[]  # Remove tools for now to avoid issues
+            tools=[]  # Tools were removed due to compatibility issues with the current LLM setup, which caused unexpected behavior during task execution. 
+                       # Future developers can reintroduce tools by ensuring compatibility with the LLM and testing for stability. Example:
+                       # tools=[ToolAgent(name="WebScraper", description="Scrapes data from the web", function=web_scraper_function)]
         )
         
         # Fact-Checking Agent
