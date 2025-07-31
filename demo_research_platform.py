@@ -117,28 +117,112 @@ Our methodology included multi-source verification, expert consultation, and qua
 
 
 def setup_llm() -> Any:
-    """Setup LLM with fallback to mock if API key not available"""
-    api_key = os.getenv("OPENAI_API_KEY")
+    """Setup LLM with support for multiple providers and fallback to mock if API key not available"""
     
-    if api_key:
-        try:
-            llm = OpenAIChat(
-                openai_api_key=api_key,
-                model_name="gpt-3.5-turbo",
-                temperature=0.7,
-                max_tokens=2000
-            )
-            # Test the connection
-            test_response = llm("Hello")
-            logger.info("✓ OpenAI API connected successfully")
-            return llm
-        except Exception as e:
-            logger.warning(f"OpenAI API failed: {e}")
-            logger.info("Falling back to mock LLM for demonstration")
-            return MockLLM("OpenAI-Mock")
-    else:
-        logger.info("No OpenAI API key found, using mock LLM for demonstration")
-        return MockLLM("Demo-LLM")
+    # Check for available providers in order of preference
+    providers = [
+        {
+            "name": "OpenAI",
+            "key_env": "OPENAI_API_KEY",
+            "models": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
+            "default_model": "gpt-3.5-turbo"
+        },
+        {
+            "name": "OpenRouter", 
+            "key_env": "OPENROUTER_API_KEY",
+            "models": [
+                "anthropic/claude-3-haiku",
+                "anthropic/claude-3-sonnet", 
+                "meta-llama/llama-3.1-8b-instruct",
+                "meta-llama/llama-3.1-70b-instruct", 
+                "mistralai/mistral-7b-instruct",
+                "mistralai/mixtral-8x7b-instruct",
+                "google/gemma-7b-it",
+                "microsoft/wizardlm-2-8x22b"
+            ],
+            "default_model": "anthropic/claude-3-haiku"
+        },
+        {
+            "name": "Ollama",
+            "key_env": None,  # Ollama doesn't need API key
+            "models": ["llama3.1", "llama3.1:8b", "mistral", "mistral:7b", "codellama", "phi3", "qwen2", "gemma2"],
+            "default_model": "llama3.1"
+        }
+    ]
+    
+    for provider in providers:
+        if provider["name"] == "OpenAI":
+            api_key = os.getenv(provider["key_env"])
+            if api_key:
+                try:
+                    from swarms import OpenAIChat
+                    llm = OpenAIChat(
+                        openai_api_key=api_key,
+                        model_name=provider["default_model"],
+                        temperature=0.7,
+                        max_tokens=2000
+                    )
+                    # Test the connection
+                    test_response = llm("Hello")
+                    logger.info(f"✓ {provider['name']} API connected successfully using {provider['default_model']}")
+                    return llm
+                except Exception as e:
+                    logger.warning(f"{provider['name']} API failed: {e}")
+                    continue
+        
+        elif provider["name"] == "OpenRouter":
+            api_key = os.getenv(provider["key_env"])
+            if api_key:
+                try:
+                    from swarms.models import OpenRouterChat
+                    llm = OpenRouterChat(
+                        model_name=provider["default_model"],
+                        openrouter_api_key=api_key,
+                        temperature=0.7,
+                        max_tokens=2000
+                    )
+                    # Test the connection
+                    test_response = llm("Hello")
+                    logger.info(f"✓ {provider['name']} API connected successfully using {provider['default_model']}")
+                    return llm
+                except Exception as e:
+                    logger.warning(f"{provider['name']} API failed: {e}")
+                    continue
+        
+        elif provider["name"] == "Ollama":
+            try:
+                from swarms.models import OllamaChat
+                llm = OllamaChat(
+                    model_name=provider["default_model"],
+                    temperature=0.7,
+                    max_tokens=2000
+                )
+                # Test if Ollama is available and model exists
+                if llm.is_available():
+                    try:
+                        test_response = llm("Hello")
+                        logger.info(f"✓ {provider['name']} connected successfully using {provider['default_model']}")
+                        return llm
+                    except ValueError as e:
+                        if "not found" in str(e):
+                            logger.warning(f"{provider['name']} model '{provider['default_model']}' not found. Available models: {llm.list_models()}")
+                        else:
+                            logger.warning(f"{provider['name']} model error: {e}")
+                        continue
+                else:
+                    logger.warning(f"{provider['name']} server not available at http://localhost:11434")
+                    continue
+            except Exception as e:
+                logger.warning(f"{provider['name']} failed: {e}")
+                continue
+    
+    # Fallback to mock LLM if no providers work
+    logger.info("No LLM providers available, using mock LLM for demonstration")
+    logger.info("💡 To use real LLMs, set one of these environment variables:")
+    logger.info("   - OPENAI_API_KEY for OpenAI models")
+    logger.info("   - OPENROUTER_API_KEY for OpenRouter models")
+    logger.info("   - Or install and run Ollama locally (https://ollama.ai)")
+    return MockLLM("Demo-LLM")
 
 
 def save_research_data(filename: str, content: str) -> str:
@@ -174,7 +258,78 @@ def load_research_data(filename: str) -> str:
         return f"Error loading file: {e}"
 
 
-def search_web(query: str) -> str:
+def display_supported_models():
+    """Display information about supported model providers"""
+    print("\n" + "="*70)
+    print("🤖 SUPPORTED MODEL PROVIDERS")
+    print("="*70)
+    
+    providers_info = [
+        {
+            "name": "OpenAI",
+            "description": "Industry-leading models from OpenAI",
+            "models": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
+            "setup": "Set OPENAI_API_KEY environment variable",
+            "website": "https://openai.com",
+            "note": "🏆 High-quality, reliable models with excellent reasoning"
+        },
+        {
+            "name": "OpenRouter", 
+            "description": "Access to 100+ models through one unified API",
+            "models": [
+                "anthropic/claude-3-haiku",
+                "anthropic/claude-3-sonnet",
+                "meta-llama/llama-3.1-8b-instruct",
+                "meta-llama/llama-3.1-70b-instruct", 
+                "mistralai/mistral-7b-instruct",
+                "mistralai/mixtral-8x7b-instruct",
+                "google/gemma-7b-it",
+                "...and 90+ more models"
+            ],
+            "setup": "Set OPENROUTER_API_KEY environment variable",
+            "website": "https://openrouter.ai",
+            "note": "💰 Pay-per-use pricing, supports most popular model providers"
+        },
+        {
+            "name": "Ollama",
+            "description": "Run powerful models locally on your machine",
+            "models": ["llama3.1", "llama3.1:8b", "mistral", "codellama", "phi3", "qwen2", "gemma2"],
+            "setup": "Install Ollama from ollama.ai and run 'ollama serve'",
+            "website": "https://ollama.ai",
+            "note": "🔒 Complete privacy, no API costs, works offline"
+        }
+    ]
+    
+    for provider in providers_info:
+        print(f"\n📋 {provider['name']}")
+        print(f"   Description: {provider['description']}")
+        print(f"   Popular Models: {', '.join(provider['models'][:3])}")
+        if len(provider['models']) > 3:
+            print(f"                   ...and more")
+        print(f"   Setup: {provider['setup']}")
+        print(f"   Website: {provider['website']}")
+        if 'note' in provider:
+            print(f"   {provider['note']}")
+    
+    print("\n" + "="*70)
+    print("💡 The demo will automatically detect and use the first available provider")
+    print("   Priority: OpenAI → OpenRouter → Ollama → Mock LLM")
+    print("="*70)
+
+
+def get_model_info(llm) -> str:
+    """Get information about the current model being used"""
+    if hasattr(llm, 'model_name'):
+        if hasattr(llm, 'openrouter_api_key'):
+            return f"OpenRouter ({llm.model_name})"
+        elif hasattr(llm, 'base_url') and 'localhost' in str(llm.base_url):
+            return f"Ollama ({llm.model_name})"
+        else:
+            return f"OpenAI ({llm.model_name})"
+    elif hasattr(llm, 'name'):
+        return f"Mock LLM ({llm.name})"
+    else:
+        return "Unknown Model"
     """Mock web search tool (replace with real implementation)"""
     import random
     print(f"🔍 Searching web for: {query}")
@@ -518,11 +673,14 @@ This demo showcases the full capabilities of the Swarms framework:
     print(banner)
 
 
-def print_menu():
-    """Print interactive menu"""
-    menu = """
+def print_menu(platform):
+    """Print interactive menu with current model information"""
+    model_info = get_model_info(platform.llm)
+    
+    menu = f"""
 ┌─────────────────────────────────────────────────────────────┐
 │                        DEMO MENU                            │
+│                Current Model: {model_info:<26} │
 ├─────────────────────────────────────────────────────────────┤
 │ 1. Sequential Research Pipeline                             │
 │    → Complete research process with agent handoffs         │
@@ -538,6 +696,9 @@ def print_menu():
 │                                                             │
 │ 5. Run All Workflows (Comprehensive Demo)                  │
 │    → Execute all workflow types for comparison             │
+│                                                             │
+│ 6. View Supported Models & Providers                       │
+│    → See all available model options                       │
 │                                                             │
 │ 0. Exit                                                     │
 └─────────────────────────────────────────────────────────────┘
@@ -620,10 +781,10 @@ def main():
         sys.exit(1)
     
     while True:
-        print_menu()
+        print_menu(platform)
         
         try:
-            choice = input("Enter your choice (0-5): ").strip()
+            choice = input("Enter your choice (0-6): ").strip()
             
             if choice == '0':
                 print("\n👋 Thank you for using the AI Research Platform!")
@@ -679,8 +840,12 @@ def main():
             elif choice == '4':
                 view_output_files()
             
+            elif choice == '6':
+                display_supported_models()
+                input("\nPress Enter to continue...")
+            
             else:
-                print("❌ Invalid choice. Please select 0-5.")
+                print("❌ Invalid choice. Please select 0-6.")
         
         except KeyboardInterrupt:
             print("\n\n👋 Demo interrupted by user. Goodbye!")

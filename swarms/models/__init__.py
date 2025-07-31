@@ -13,6 +13,8 @@ from swarms.models.mistral import Mistral  # noqa: E402
 from swarms.models.mixtral import Mixtral  # noqa: E402
 from swarms.models.mpt import MPT7B  # noqa: E402
 from swarms.models.nougat import Nougat  # noqa: E402
+from swarms.models.ollama import OllamaChat  # noqa: E402
+from swarms.models.open_router import OpenRouterChat  # noqa: E402
 from swarms.models.palm import GooglePalm as Palm  # noqa: E402
 from swarms.models.openai_tts import OpenAITTS  # noqa: E402
 from swarms.models.popular_llms import (
@@ -64,10 +66,12 @@ __all__ = [
     "Mixtral",
     "MPT7B",
     "Nougat",
+    "OllamaChat",
     "OpenAI",
     "OpenAIChat",
     "OpenAIEmbeddings",
     "OpenAITTS",
+    "OpenRouterChat",
     "OctoAIChat",
     "Palm",
     "QwenVLMultiModal",

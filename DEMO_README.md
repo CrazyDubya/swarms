@@ -84,8 +84,49 @@ A comprehensive demonstration of the Swarms framework capabilities through an in
 - **Parallel Processing**: Concurrent analysis for faster results
 - **Network Effects**: Distributed intelligence and collaboration
 
-### LLM Integration
-- **Multiple Providers**: OpenAI, Anthropic, Google, HuggingFace support
+### LLM Integration & Model Support
+The demo supports multiple model providers with automatic fallback:
+
+#### 🏢 **Commercial Providers**
+- **OpenAI**: GPT-4, GPT-3.5-turbo, GPT-4-turbo
+  ```bash
+  export OPENAI_API_KEY="your-key-here"
+  ```
+
+- **OpenRouter**: Access to 100+ models through one API
+  ```bash
+  export OPENROUTER_API_KEY="your-key-here"
+  ```
+  - Anthropic Claude models
+  - Meta Llama models  
+  - Mistral AI models
+  - Google Gemma models
+  - And many more...
+
+#### 🖥️ **Local Providers**
+- **Ollama**: Run models locally on your machine
+  ```bash
+  # Install Ollama
+  curl -fsSL https://ollama.ai/install.sh | sh
+  
+  # Start server
+  ollama serve
+  
+  # Pull a model
+  ollama pull llama3.1
+  ```
+  - No API key required
+  - Complete privacy
+  - Works offline
+  - Popular models: llama3.1, mistral, codellama, phi3
+
+#### 🔄 **Automatic Provider Detection**
+The demo automatically detects and uses available providers in this order:
+1. **OpenAI** (if OPENAI_API_KEY is set)
+2. **OpenRouter** (if OPENROUTER_API_KEY is set)
+3. **Ollama** (if server is running locally)
+4. **Mock LLM** (always available for demonstration)
+
 - **Fallback System**: Mock LLM for demo without API keys
 - **Context Management**: Maintains conversation history and state
 
