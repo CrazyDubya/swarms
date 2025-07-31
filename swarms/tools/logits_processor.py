@@ -29,6 +29,13 @@ except ImportError:
     except ImportError:
         # Create a dummy LogitsWarper for newer versions
         class LogitsWarper:
+            """
+            A fallback implementation of the LogitsWarper class for compatibility
+            with newer versions of the transformers library where LogitsWarper
+            might not be available.
+
+            This dummy implementation simply returns the scores unchanged.
+            """
             def __call__(self, input_ids, scores):
                 return scores
 
