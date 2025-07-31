@@ -13,6 +13,14 @@ except ImportError:
     except ImportError:
         # Create a dummy StoppingCriteria for newer versions
         class StoppingCriteria:
+            """
+            A dummy implementation of the StoppingCriteria class.
+
+            This class is provided as a compatibility fallback for newer versions
+            of the transformers library where the StoppingCriteria class might not
+            be available. It always returns False, indicating that the stopping
+            criteria are never met.
+            """
             def __call__(self, input_ids, scores, **kwargs):
                 return False
     
